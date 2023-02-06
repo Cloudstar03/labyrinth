@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Лабиринт</title>
+<meta name="viewport" content="width=device-width, user-scalable=no">
+</head>
+<body>
+
+<canvas id="c1"></canvas>
+
+<style type="text/css">
+#c1{
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        border: 5px solid #000;
+    }
+</style>
+
+<script type="text/javascript">
+const canvasSetup = document.getElementById("c1");
+const ctx = canvasSetup.getContext("2d");
+
+const SIZE = 5;
+canvasSetup.style.border = `${SIZE}px solid #000`
+const WALL_COLOR = 'black';
+const FREE_COLOR = 'white';
+const CLEANER_COLOR = 'green';
+
+const CLEANERS_NUMBERS = 100;
+
+const COLUMS = 101;
+const ROWS = 101;
+
+const matrix = createMatrix(COLUMS, ROWS);
+
+const start_x = rand(0, (COLUMS-1)/2)*2;
+const start_y = rand(0, (ROWS-1)/2)*2
+const cleaners = [];
+for(let i = 0; i < CLEANERS_NUMBERS; i++){
+    cleaners.push({
+        x: start_x, 
+        y: start_y
+    });
+}
+
+main()
+function main(){
+    if(!isEnd()){
+        for(const cleaner of cleaners){
+            moveCleaner(cleaner);
+        }
+        drawMatrix();
+        for(const cleaner of cleaners){
+            drawCleaner(cleaner);
+        }
+        var animation = requestAnimationFrame(main);
+    }
+    else{
+        cancelAnimationFrame(animation);
+        drawMatrix();
+    }
+}
+
+function createMatrix(colums, rows){
+    const matrix = [];
+    for(let y = 0; y < rows; y++){
+        const row = [];
+        for(let x = 0; x < colums; x++){
+            row.push(0);
+        }
+        matrix.push(row);
+    }
+    return matrix;
+}
+
+function drawMatrix(){
+    canvasSetup.width = COLUMS * SIZE
+    canvasSetup.height = ROWS * SIZE
+    for(let y = 0; y < COLUMS; y++){
+        for(let x = 0; x < ROWS; x++){
+            const color = matrix[y][x] ? FREE_COLOR: WALL_COLOR;
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.rect(x*SIZE, y*SIZE, SIZE, SIZE);
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+}
+
+function drawCleaner(cleaner) {
+    ctx.beginPath();
+    ctx.fillStyle = CLEANER_COLOR;
+    ctx.rect(
+        cleaner.x*SIZE, 
+        cleaner.y*SIZE, 
+        SIZE, 
+        SIZE
+    );
+    ctx.fill();
+    ctx.closePath();
+}
+
+function moveCleaner(cleaner) {
+    const directions = [];
+    if(cleaner.x > 0)
+        directions.push([-2, 0])
+    if(cleaner.x < COLUMS-1)
+        directions.push([2, 0])
+    if(cleaner.y > 0)
+        directions.push([0, -2])
+    if(cleaner.y < ROWS-1)
+        directions.push([0, 2])
+    const [dx, dy] = getRandomItem(directions);
+    cleaner.x += dx;
+    cleaner.y += dy;
+    if(!matrix[cleaner.y][cleaner.x]){        
+        matrix[cleaner.y][cleaner.x] = 1
+        matrix[cleaner.y - dy/2][cleaner.x - dx/2] = 1
+    }
+}
+
+function getRandomItem(array) {
+    const index = Math.floor(Math.random() * array.length);
+    return array[index];
+}
+
+function rand(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function isEnd() {
+    for(let y = 0; y < COLUMS; y+=2){
+        for(let x = 0; x < ROWS; x+=2){
+            if(!matrix[y][x]) return false
+        }
+    }
+    return true
+}
+</script>
+</body></html>
